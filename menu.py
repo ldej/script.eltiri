@@ -25,7 +25,7 @@ class Menu:
                 break
             action = ["email_history", "history", "users"][idx]
 
-            if action == "hsitory":
+            if action == "history":
                 History(self.sqlcursor).show_menu()
             elif action == "users":
                 Users(self.sqlcon, self.sqlcursor).show_menu()
@@ -45,11 +45,11 @@ class History:
 
         self.next_page_index = -2
         self.previous_page_index = 0
-        self.limit = 25
+        self.limit = 50
         self.offset = 0
 
         self.len_records = self.query_len_records()
-        self.number_pages = (self.len_records / self.limit)
+        self.number_pages = (self.len_records / self.limit) or 1
 
         self.current_page = 0
 
@@ -69,11 +69,16 @@ class History:
         self.current_page = (self.offset / self.limit) + 1
 
         if not self.current_page == 1:
+            self.previous_page_index = 0
             self.records.insert(self.previous_page_index, "<- Previous page")
+        else:
+            self.previous_page_index = None
 
         if self.len_records > self.offset + self.limit:
             self.records.append("Next page ->")
             self.next_page_index = len(self.records) - 1
+        else:
+            self.next_page_index = None
 
     def show_menu(self):
         self.load_records()
@@ -211,8 +216,8 @@ class EmailHistory:
         self.history_menu = [
             ("today", "Today"),
             ("today_yesterday", "Today and yesterday"),
-            ("select", "Select (from the last 200 records"),
-            ("range", "Range (from the last 200 records"),
+            ("select", "Select (from the last 200 records)"),
+            ("range", "Range (from the last 200 records)"),
         ]
 
     def show_menu(self):

@@ -6,3 +6,4 @@ To do:
  - Multilingual
  - Addon name from variable
  - Icon
+ - Search history
