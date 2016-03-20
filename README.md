@@ -8,3 +8,4 @@ To do:
  - Addon name from variable
  - Icon
  - Search history
+ 
