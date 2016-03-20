@@ -218,6 +218,7 @@ class EmailHistory:
             ("today_yesterday", "Today and yesterday"),
             ("select", "Select (from the last 200 records)"),
             ("range", "Range (from the last 200 records)"),
+            ("from", "From selected record until now"),
         ]
 
     def show_menu(self):
@@ -244,8 +245,9 @@ class EmailHistory:
                 elif history_menu == "select":
                     self.select()
                 elif history_menu == "range":
-                    pass
-                    #self.range() TODO
+                    pass  # TODO
+                elif history_menu == "from":
+                    pass  # TODO
 
             if cancel:
                 break
