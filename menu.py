@@ -16,6 +16,7 @@ addonname = addon.getAddonInfo('name')
 class Menu:
     def __init__(self):
         self.sqlcon, self.sqlcursor = utils.init_db()
+        self.history = None
 
     def show(self):
         while True:
@@ -42,9 +43,10 @@ class History:
     def __init__(self, sqlcursor):
         self.sqlcursor = sqlcursor
         self.records = []
+        self.record_tuples = []
 
-        self.next_page_index = -2
-        self.previous_page_index = 0
+        self.next_page_index = None
+        self.previous_page_index = None
         self.limit = 50
         self.offset = 0
 
@@ -57,14 +59,14 @@ class History:
         return self.sqlcursor.execute("SELECT COUNT(*) FROM records").next()[0]
 
     def load_records(self):
-        record_tuples = self.sqlcursor.execute(
-            """SELECT records.datetime, records.title
-               FROM records ORDER BY datetime DESC
-               LIMIT {1}
-               OFFSET {0}""".format(self.offset, self.limit))
-
+        self.record_tuples = self.sqlcursor.execute(
+            "SELECT records.datetime, records.title, records.media_type, records.url "
+            "FROM records ORDER BY datetime DESC "
+            "LIMIT {1} "
+            "OFFSET {0}".format(self.offset, self.limit))
+        self.record_tuples = [record for record in self.record_tuples]
         self.records = ["{0} {1}".format(record[0].strftime("%d-%m-%Y %H:%M:%S"), record[1])
-                        for record in record_tuples]
+                        for record in self.record_tuples]
 
         self.current_page = (self.offset / self.limit) + 1
 
@@ -83,8 +85,16 @@ class History:
     def show_menu(self):
         self.load_records()
         while True:
-            idx = xbmcgui.Dialog().select(
-                "Played items - Page ({0}/{1})".format(self.current_page, self.number_pages), self.records)
+
+            # Only show the select box if the fullscreen video player is not visible
+            # Because we are playing video
+            visibility = xbmcgui.getCurrentWindowId() == 12005
+            if visibility:
+                xbmc.sleep(100)
+                continue
+            else:
+                idx = xbmcgui.Dialog().select(
+                    "Played items - Page ({0}/{1})".format(self.current_page, self.number_pages), self.records)
             if idx == -1:
                 break
             elif idx == self.next_page_index:
@@ -94,8 +104,31 @@ class History:
                 self.offset -= self.limit
                 self.load_records()
             else:
-                # TODO find out how to play an item
-                xbmc.log("Play item: {0}".format(self.records[idx]))
+                if self.previous_page_index is not None:
+                    idx -= 1
+
+                timestamp, title, media_type, url = self.record_tuples[idx]
+
+                if media_type in ["movie", "youtube"]:
+                    playlist = xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
+                    playlist.clear()
+                    listitem = xbmcgui.ListItem(title)
+                    listitem.setInfo('video', {'title': title})
+                    playlist.add(url=url, listitem=listitem)
+                    xbmc.Player().play(playlist)
+
+                    # Wait until the video is visible
+                    while not xbmcgui.getCurrentWindowId() == 12005:
+                        xbmc.sleep(100)
+                elif media_type == "song":
+                    playlist = xbmc.PlayList(xbmc.PLAYLIST_MUSIC)
+                    playlist.clear()
+                    listitem = xbmcgui.ListItem(title)
+                    listitem.setInfo('music', {'title': title})
+                    playlist.add(url=url, listitem=listitem)
+                    xbmc.Player().play(playlist)
+                else:
+                    xbmcgui.notification("What was?", "Don't know how to play: {0}".format(media_type))
 
         self.exit()
 

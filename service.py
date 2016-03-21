@@ -17,6 +17,7 @@ class WhatWasService(xbmc.Monitor):
         self.sqlcursor = None
 
         self.load_db()
+        self.player = xbmc.Player()
 
     def run(self):
         while 1:
@@ -36,27 +37,37 @@ class WhatWasService(xbmc.Monitor):
                 if len(title) == 11 and title.find('.') == -1:
                     video_id = title
 
-                    # YouTube
                     youtube = build(YOUTUBE_API_SERVICE_NAME, YOUTUBE_API_VERSION, developerKey=API_KEY)
 
-                    response = youtube.videos().list(id=video_id, parts="snippet")
-                    video_title = response.get('items')[0].get('snippet').get('title')
+                    response = youtube.videos().list(id=video_id, part="snippet").execute()
 
+                    video_title = response.get('items')[0].get('snippet').get('title')
                     video_url = "https://www.youtube.com/watch?v={0}".format(video_id)
 
                     string = "{0} ({1})".format(video_title, video_url)
+
+                    media_type = "youtube"
+
+                    url = "plugin://plugin.video.youtube/play/?video_id={0}".format(video_id)
                 else:
                     string = title
+                    url = self.player.getPlayingFile()
             elif media_type == "song":
-                string = "[{0}] {1}. {2} - {3}".format(
-                     item.get('album'), item.get('track'), ', '.join(item.get('artist')), item.get('title'))
+                url = self.player.getPlayingFile()
+                try:
+                    string = "[{0}] {1}. {2} - {3}".format(
+                         item['album'], item['track'], ', '.join(item['artist']), item['title'])
+                except KeyError:
+                    string = item.get('title', 'Can\'t find title')
             else:
+                string = str(item)
+                url = self.player.getPlayingFile()
                 xbmc.log("WhatWas: Unknown media type: {0}".format(media_type))
-                return
 
-            to_store = (datetime.datetime.now(), string)
+            to_store = (datetime.datetime.now(), string, media_type, url)
 
-            self.sqlcursor.execute("INSERT INTO records(datetime, title) VALUES (?, ?)", to_store)
+            self.sqlcursor.execute(
+                "INSERT INTO records(datetime, title, media_type, url) VALUES (?, ?, ?, ?)", to_store)
             self.sqlcon.commit()
 
     def exit(self):

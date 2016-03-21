@@ -26,7 +26,8 @@ def init_db():
     sqlcon = sqlite3.connect(dbpath, detect_types=sqlite3.PARSE_DECLTYPES)
     sqlcursor = sqlcon.cursor()
 
-    sql = "CREATE TABLE IF NOT EXISTS records (id INTEGER PRIMARY KEY, datetime TIMESTAMP, title TEXT)"
+    sql = "CREATE TABLE IF NOT EXISTS records " \
+          "(id INTEGER PRIMARY KEY, datetime TIMESTAMP, title TEXT, media_type TEXT, url TEXT)"
     sqlcursor.execute(sql)
 
     sql = "CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, name TEXT, email TEXT)"
