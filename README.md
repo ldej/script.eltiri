@@ -1,14 +1,16 @@
-### To do:
+## To do:
+ - [X] Choose a better name
  - [X] Start playback of selected item in history
  - [ ] Email
  - [ ] Range selection of history
  - [ ] From selection of history
  - [ ] Paginated selection of complete history
  - [ ] Multilingual
- - [ ] Addon name from variable
+ - [X] Addon name from variable
  - [ ] Icon
  - [ ] Search history
  - [ ] Clear history
  - [ ] Delete items from history
  - [ ] Temporary disable recording history
  - [ ] Logging exceptions
+ - [ ] Handle other media types, other plugins (Vimeo, Soundcloud, etc)

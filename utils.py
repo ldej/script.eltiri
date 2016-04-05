@@ -5,23 +5,23 @@ import xbmc
 import xbmcaddon
 import xbmcvfs
 
-__addon_id__ = u'script.whatwas'
-__addon__ = xbmcaddon.Addon(__addon_id__)
+addon = xbmcaddon.Addon()
+addonname = addon.getAddonInfo('name')
 
 
 def data_dir():
     """"get user data directory of this addon.
     according to http://wiki.xbmc.org/index.php?title=Add-on_Rules#Requirements_for_scripts_and_plugins
     """
-    __datapath__ = xbmc.translatePath( __addon__.getAddonInfo('profile') ).decode('utf-8')
-    if not xbmcvfs.exists(__datapath__):
-        xbmcvfs.mkdir(__datapath__)
-    return __datapath__
+    datapath = xbmc.translatePath(addon.getAddonInfo('profile')).decode('utf-8')
+    if not xbmcvfs.exists(datapath):
+        xbmcvfs.mkdir(datapath)
+    return datapath
 
 
 def init_db():
     dbdirectory = xbmc.translatePath(data_dir()).decode('utf-8')
-    dbpath = os.path.join(dbdirectory, "whatwas.db")
+    dbpath = os.path.join(dbdirectory, "{0}.db".format(addonname))
 
     sqlcon = sqlite3.connect(dbpath, detect_types=sqlite3.PARSE_DECLTYPES)
     sqlcursor = sqlcon.cursor()

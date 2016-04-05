@@ -128,7 +128,7 @@ class History:
                     playlist.add(url=url, listitem=listitem)
                     xbmc.Player().play(playlist)
                 else:
-                    xbmcgui.notification("What was?", "Don't know how to play: {0}".format(media_type))
+                    xbmcgui.notification(addonname, "Don't know how to play: {0}".format(media_type))
 
         self.exit()
 
@@ -174,7 +174,7 @@ class Users:
                     email_input
                 )
                 if not match:
-                    xbmcgui.Dialog().notification("What Was?", "Invalid email address")
+                    xbmcgui.Dialog().notification(addonname, "Invalid email address")
                 email_address = email_input
                 break
 
@@ -190,7 +190,7 @@ class Users:
             self.sqlcursor.execute("INSERT INTO users(name, email) VALUES (?, ?)", (name, email_address))
             self.sqlcon.commit()
 
-            xbmcgui.Dialog().notification("What Was?", "User {0} ({1}) added.".format(name, email_address))
+            xbmcgui.Dialog().notification(addonname, "User {0} ({1}) added.".format(name, email_address))
             break
 
     def delete_user(self):
@@ -206,7 +206,7 @@ class Users:
             self.sqlcursor.execute("DELETE FROM users WHERE users.id = ?", (user_to_delete[0],))
             self.sqlcon.commit()
 
-            xbmcgui.Dialog().notification("What Was?", "Deleted {0} ({1})".format(user_to_delete[1], user_to_delete[2]))
+            xbmcgui.Dialog().notification(addonname, "Deleted {0} ({1})".format(user_to_delete[1], user_to_delete[2]))
 
     def show_users(self):
         self.load_users()
@@ -327,7 +327,7 @@ class EmailHistory:
         return [record for record in record_tuples]
 
     def send_email(self, users, records):
-        xbmcgui.Dialog().notification("What was?", "Email sent!")
+        xbmcgui.Dialog().notification(addonname, "Email sent!")
         xbmc.log(str(users))
         xbmc.log(str(records))
         # TODO

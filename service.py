@@ -9,7 +9,7 @@ YOUTUBE_API_SERVICE_NAME = "youtube"
 YOUTUBE_API_VERSION = "v3"
 
 
-class WhatWasService(xbmc.Monitor):
+class MonitorService(xbmc.Monitor):
     def __init__(self):
         self.dbpath = ''
         self.dbdirectory = ''
