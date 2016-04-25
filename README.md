@@ -1,12 +1,12 @@
 ## To do:
  - [X] Choose a better name
  - [X] Start playback of selected item in history
- - [ ] Email
- - [ ] Range selection of history
- - [ ] From selection of history
- - [ ] Paginated selection of complete history
+ - [X] Email
+ - [X] From selection of history
+ - [X] Paginated selection of complete history
  - [ ] Multilingual
  - [X] Addon name from variable
+ - [ ] Do not open "Email history" when no smtp configured
  - [ ] Icon
  - [ ] Search history
  - [ ] Clear history
@@ -14,3 +14,5 @@
  - [ ] Temporary disable recording history
  - [ ] Logging exceptions
  - [ ] Handle other media types, other plugins (Vimeo, Soundcloud, etc)
+ - [ ] Deploy to addon repository
+ - [ ] CI/CD

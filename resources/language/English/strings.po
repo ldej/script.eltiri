@@ -1,0 +1,49 @@
+# XBMC Media Center language file
+# Addon id: script.eltiri
+# Addon version: 1.0.0
+# Addon Provider: Laurence de Jong
+msgid ""
+msgstr ""
+"Project-Id-Version: XBMC Addons\n"
+"Report-Msgid-Bugs-To: alanwww1@xbmc.org\n"
+"POT-Creation-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: XBMC Translation Team\n"
+"Language-Team: English (http://www.transifex.com/projects/p/xbmc-addons/language/en/)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Language: en\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgctxt "#30001"
+msgid "SMTP Settings"
+msgstr ""
+
+msgctxt "#30002"
+msgid "Mail server"
+msgstr ""
+
+msgctxt "#30003"
+msgid "User"
+msgstr ""
+
+msgctxt "#30004"
+msgid "Password"
+msgstr ""
+
+msgctxt "#30005"
+msgid "Encryption"
+msgstr ""
+
+msgctxt "#30006"
+msgid "Email of sender"
+msgstr ""
+
+msgctxt "#30008"
+msgid "Name of sender"
+msgstr ""
+
+msgctxt "#30007"
+msgid "Send test email"
+msgstr ""

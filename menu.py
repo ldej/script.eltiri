@@ -1,6 +1,7 @@
 # -*- coding: latin-1 -*-
 
 import re
+import sys
 
 import datetime
 import xbmc
@@ -32,7 +33,6 @@ class Menu:
                 Users(self.sqlcon, self.sqlcursor).show_menu()
             elif action == "email_history":
                 EmailHistory(self.sqlcon, self.sqlcursor).show_menu()
-
         self.exit()
 
     def exit(self):
@@ -54,6 +54,8 @@ class History:
         self.number_pages = (self.len_records / self.limit) or 1
 
         self.current_page = 0
+
+        self.should_break = False
 
     def query_len_records(self):
         return self.sqlcursor.execute("SELECT COUNT(*) FROM records").next()[0]
@@ -82,7 +84,11 @@ class History:
         else:
             self.next_page_index = None
 
-    def show_menu(self):
+    def show_menu(self, on_select=None):
+        if not on_select:
+            on_select = self.play
+        result = None
+
         self.load_records()
         while True:
 
@@ -96,7 +102,7 @@ class History:
                 idx = xbmcgui.Dialog().select(
                     "Played items - Page ({0}/{1})".format(self.current_page, self.number_pages), self.records)
             if idx == -1:
-                break
+                self.should_break = True
             elif idx == self.next_page_index:
                 self.offset += self.limit
                 self.load_records()
@@ -107,33 +113,43 @@ class History:
                 if self.previous_page_index is not None:
                     idx -= 1
 
-                timestamp, title, media_type, url = self.record_tuples[idx]
+                result = on_select(idx)
 
-                if media_type in ["movie", "youtube"]:
-                    playlist = xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
-                    playlist.clear()
-                    listitem = xbmcgui.ListItem(title)
-                    listitem.setInfo('video', {'title': title})
-                    playlist.add(url=url, listitem=listitem)
-                    xbmc.Player().play(playlist)
+            if self.should_break:
+                break
+        return result
 
-                    # Wait until the video is visible
-                    while not xbmcgui.getCurrentWindowId() == 12005:
-                        xbmc.sleep(100)
-                elif media_type == "song":
-                    playlist = xbmc.PlayList(xbmc.PLAYLIST_MUSIC)
-                    playlist.clear()
-                    listitem = xbmcgui.ListItem(title)
-                    listitem.setInfo('music', {'title': title})
-                    playlist.add(url=url, listitem=listitem)
-                    xbmc.Player().play(playlist)
-                else:
-                    xbmcgui.notification(addonname, "Don't know how to play: {0}".format(media_type))
+    def play(self, idx):
+        timestamp, title, media_type, url = self.record_tuples[idx]
 
-        self.exit()
+        if media_type in ["movie", "youtube"]:
+            playlist = xbmc.PlayList(xbmc.PLAYLIST_VIDEO)
+            playlist.clear()
+            listitem = xbmcgui.ListItem(title)
+            listitem.setInfo('video', {'title': title})
+            playlist.add(url=url, listitem=listitem)
+            xbmc.Player().play(playlist)
 
-    def exit(self):
-        pass
+            # Wait until the video is visible
+            while not xbmcgui.getCurrentWindowId() == 12005:
+                xbmc.sleep(100)
+        elif media_type == "song":
+            playlist = xbmc.PlayList(xbmc.PLAYLIST_MUSIC)
+            playlist.clear()
+            listitem = xbmcgui.ListItem(title)
+            listitem.setInfo('music', {'title': title})
+            playlist.add(url=url, listitem=listitem)
+            xbmc.Player().play(playlist)
+        else:
+            xbmcgui.Dialog().notification(addonname, "Don't know how to play: {0}".format(media_type))
+
+        return False
+
+    def records_from(self, idx):
+        self.should_break = True
+        records = self.record_tuples[0:idx+1]
+        records.reverse()
+        return records
 
 
 class Users:
@@ -190,7 +206,7 @@ class Users:
             self.sqlcursor.execute("INSERT INTO users(name, email) VALUES (?, ?)", (name, email_address))
             self.sqlcon.commit()
 
-            xbmcgui.Dialog().notification(addonname, "User {0} ({1}) added.".format(name, email_address))
+            xbmcgui.Dialog().notification(addonname, "Added {0} ({1}).".format(name, email_address))
             break
 
     def delete_user(self):
@@ -249,8 +265,6 @@ class EmailHistory:
         self.history_menu = [
             ("today", "Today"),
             ("today_yesterday", "Today and yesterday"),
-            ("select", "Select (from the last 200 records)"),
-            ("range", "Range (from the last 200 records)"),
             ("from", "From selected record until now"),
         ]
 
@@ -261,6 +275,7 @@ class EmailHistory:
             if not selected_users:
                 break
             to_email = [self.users.users[index] for index in selected_users]
+            to_email = [(user[1], user[2]) for user in to_email]
 
             cancel = False
             while not self.records:
@@ -275,12 +290,8 @@ class EmailHistory:
                     self.today()
                 elif history_menu == "today_yesterday":
                     self.today_yesterday()
-                elif history_menu == "select":
-                    self.select()
-                elif history_menu == "range":
-                    pass  # TODO
                 elif history_menu == "from":
-                    pass  # TODO
+                    self.select_from()
 
             if cancel:
                 break
@@ -288,16 +299,9 @@ class EmailHistory:
             self.send_email(to_email, self.records)
             break
 
-    def select(self):
-        while True:
-            record_tuples, record_labels = self.query_records()
-            result = xbmcgui.Dialog().multiselect("Select history", record_labels)
-
-            if not result:
-                pass
-
-            self.records = [record_tuples[index] for index in result]
-            break
+    def select_from(self):
+        history = History(self.sqlcursor)
+        self.records = history.show_menu(on_select=history.records_from)
 
     def today(self):
         today = datetime.date.today()
@@ -309,29 +313,27 @@ class EmailHistory:
         yesterday = datetime.datetime(year=today.year, month=today.month, day=today.day-1)
         self.records = self.query_records_date(yesterday)
 
-    def query_records(self):
-        record_tuples = self.sqlcursor.execute(
-            """SELECT * FROM (SELECT records.id, records.datetime, records.title
-               FROM records ORDER BY datetime DESC LIMIT 200) as records_2 ORDER BY records_2.datetime ASC"""
-        )
-        record_tuples = [record for record in record_tuples]
-        records = ["{0} {1}".format(record[1].strftime("%d-%m-%Y %H:%M:%S"), record[2]) for record in record_tuples]
-        return record_tuples, records
-
     def query_records_date(self, today):
         record_tuples = self.sqlcursor.execute(
-            """SELECT records.id, records.datetime, records.title
+            """SELECT records.datetime, records.title
                FROM records WHERE records.datetime > ? ORDER BY datetime ASC""",
             (today, )
         )
         return [record for record in record_tuples]
 
     def send_email(self, users, records):
-        xbmcgui.Dialog().notification(addonname, "Email sent!")
-        xbmc.log(str(users))
-        xbmc.log(str(records))
-        # TODO
-        pass
+        result = xbmcgui.Dialog().yesno(
+            "Send email?", "Do you want to send {0} records to:".format(len(records)),
+            ", ".join(['{0} <{1}>'.format(user[0], user[1]) for user in users])
+        )
+        if result:
+            utils.send_mail(utils.construct_html_payload(records), utils.construct_plain_payload(records), users)
+
 
 if __name__ == '__main__':
-    Menu().show()
+    if len(sys.argv) > 1:
+        command = sys.argv[1].lower()
+        if command == 'send_test_email':
+              utils.send_test_email()
+    else:
+        Menu().show()

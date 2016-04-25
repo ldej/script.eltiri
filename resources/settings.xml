@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<settings>
+    <category label="30001">
+        <setting id="smtp_server" type="text" label="30002" default=""/>
+        <setting id="smtp_username" type="text" label="30003" default="" />
+        <setting id="smtp_password" type="text" option="hidden" label="30004" default="" />
+        <setting id="smtp_encryption" type="labelenum" label="30005" values="STARTTLS|SSL/TLS|None" default="SSL/TLS" />
+        <setting id="smtp_from_email" type="text" label="30006" default="" />
+        <setting id="smtp_from_name" type="text" label="30008" default="" />
+        <setting id="checksettings" type="action" label="30007" option="close" action="RunScript(script.eltiri,send_test_email)" default="" />
+    </category>
+</settings>
